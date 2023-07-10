@@ -896,6 +896,24 @@ function generateOutputString() {
   let code = '';
 
   switch (settings.outputFormat) {
+    case 'lcd_c': {
+      images.each((image, i) => {
+        code = imageToString(image);
+
+        // Trim whitespace from end and remove trailing comma
+        code = code.replace(/,\s*$/, '');
+
+        code = `\t${code.split('\n').join('\n\t')}\n`;
+        // const variableCount = images.length() > 1 ? count++ : '';
+        const comment = `// '${image.glyph}', ${image.canvas.width}x${image.canvas.height}px\n`;
+
+        const varname = getIdentifier() + (images.length() > 1 ? `_${i}` : "");
+        code = `${comment}const ${getImageType()} ${varname} [] = {\n${code}};\n`;
+        outputString += code;
+      });
+      break;
+    }
+
     case 'arduino': {
       const varQuickArray = [];
       let bytesUsed = 0;
