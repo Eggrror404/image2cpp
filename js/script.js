@@ -897,6 +897,9 @@ function generateOutputString() {
 
   switch (settings.outputFormat) {
     case 'lcd_c': {
+      const varQuickArray = [];
+      let bytesUsed = 0;
+      // --
       images.each((image, i) => {
         code = imageToString(image);
 
@@ -906,11 +909,18 @@ function generateOutputString() {
         code = `\t${code.split('\n').join('\n\t')}\n`;
         // const variableCount = images.length() > 1 ? count++ : '';
         const comment = `// '${image.glyph}', ${image.canvas.width}x${image.canvas.height}px\n`;
+        bytesUsed += code.split('\n').length * 16; // 16 bytes per line.
 
-        const varname = getIdentifier() + (images.length() > 1 ? `_${i}` : "");
+        const varname = getIdentifier() + image.glyph.replace(/[^a-zA-Z0-9]/g, '_');
+        varQuickArray.push(varname);
         code = `${comment}const ${getImageType()} ${varname} [] = {\n${code}};\n`;
         outputString += code;
       });
+
+      varQuickArray.sort();
+      outputString += `\n// Array of all bitmaps for convenience. (Total bytes used to store images in PROGMEM = ${bytesUsed})\n`;
+      outputString += `const int ${getIdentifier()}_LEN = ${varQuickArray.length};\n`;
+      outputString += `const ${getImageType()}* ${getIdentifier()}allArray[${varQuickArray.length}] = {\n\t${varQuickArray.join(',\n\t')}\n};\n`;
       break;
     }
 
